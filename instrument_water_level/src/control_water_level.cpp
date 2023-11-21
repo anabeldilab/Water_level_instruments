@@ -21,13 +21,20 @@ void waterLevelReached(Motor* mainMotor, Motor* auxMotor) {
 }
 
 
-void controlWaterLevel(long targetWeight, HX711* scale, Motor* mainMotor, Motor* auxMotor, const long tolerance) {
+void changeTargetWeight(long* targetWeight, const long newTargetWeight, bool* weightControl) {
+  *targetWeight = newTargetWeight;
+  *weightControl = true;
+}
+
+
+void controlWaterLevel(long targetWeight, HX711* scale, Motor* mainMotor, Motor* auxMotor, const long tolerance, bool* weightControl) {
   long scaleValue = scale->get_units(5);
   if (isWeightReached(targetWeight, scaleValue, tolerance)) {
     Serial.println("Water level reached");
     Serial.print("Units: ");
     Serial.println(scaleValue);
     waterLevelReached(mainMotor, auxMotor);
+    *weightControl = false;
   } else if (scaleValue < targetWeight) {
     Serial.println("Filling container...");
     Serial.print("Units: ");

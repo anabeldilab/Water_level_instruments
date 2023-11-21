@@ -29,55 +29,50 @@ const Motor mainMotor = {PinIN1, PinIN2};
 const Motor auxMotor = {PinIN3, PinIN4};
 
 long targetWeight = 0; 
+bool weightControl = false;
 
 SCPI_Parser my_instrument;
 
 void setup() {
   Serial.begin(9600);
 
+  my_instrument.SetCommandTreeBase(F("TANK:LEVEL"));
+  my_instrument.RegisterCommand(F(":INC"), &increaseLevel);
+  my_instrument.RegisterCommand(F(":DEC"), &decreaseLevel);
+  my_instrument.RegisterCommand(F(":CAL"), &calibrate);
+  my_instrument.RegisterCommand(F(":UNITS?"), &getUnits);
+
   setScalePins(&scale, dataPin, clockPin);
-
-  Serial.print("UNITS: ");
-  float currentUnits = scale.get_units(10);
-  Serial.println(currentUnits);
-
-  Serial.println("Do you want to calibrate the terminal? 0 o 1");
-  uint8_t calibration = terminalRead();
-  if (calibration) {
-    calibrateScale(&scale);
-  }
-
   setMotorPins(&mainMotor);
   setMotorPins(&auxMotor);
-
-  Serial.print("Peso actual: ");
-  Serial.println(scale.get_units(10));
-  Serial.println("Introduzca un peso deseado inicial: ");
-  targetWeight = terminalRead();
-  Serial.println();
 }
 
+
 void loop() {
-  controlWaterLevel(targetWeight, &scale, &mainMotor, &auxMotor, TOLERANCE);
+  my_instrument.ProcessInput(Serial, "\n");
+  if (weightControl) {
+    controlWaterLevel(targetWeight, &scale, &mainMotor, &auxMotor, TOLERANCE, &weightControl);
+  }
   delay(200);
 }
 
-long terminalRead() {
-  String incomingString = "";
-  long convertion;
-  while (!Serial.available());
 
-  incomingString = Serial.readString();
-    
-  if (incomingString.length() >= 1) {
-    incomingString.remove(incomingString.length() - 1);
-    
-    Serial.print("I received: ");
-    Serial.println(incomingString);
-  }
-  convertion = incomingString.toInt();
-  Serial.print("Convertion: ");
-  Serial.println(convertion);    
+void increaseLevel(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  fillContainer(&mainMotor, &auxMotor);
+}
 
-  return convertion;
+
+void decreaseLevel(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  emptyContainer(&mainMotor, &auxMotor);
+}
+
+
+void calibrate(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  calibrateScale(&scale);
+}
+
+
+void getUnits(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  interface.print("Units: ");
+  interface.println(scale.get_units(10));
 }

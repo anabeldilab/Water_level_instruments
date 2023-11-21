@@ -4,6 +4,7 @@ void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin) {
   scale->begin(dataPin, clockPin);
 }
 
+
 void calibrateScale(HX711* scale) {
   Serial.println("\nPut 210gr in the scale, press enter to continue");
   while(!Serial.available());
