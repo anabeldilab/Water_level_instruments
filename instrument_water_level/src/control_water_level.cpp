@@ -3,19 +3,19 @@
 #include "..\include\scale.h"
 
 
-void emptyContainer(Motor* mainMotor, Motor* auxMotor) {
+void emptyContainer(const Motor* mainMotor, const Motor* auxMotor) {
   motorTurnOn(mainMotor);
   motorTurnOff(auxMotor);
 }
 
 
-void fillContainer(Motor* mainMotor, Motor* auxMotor) {
+void fillContainer(const Motor* mainMotor, const Motor* auxMotor) {
   motorTurnOff(mainMotor);
   motorTurnOn(auxMotor);
 }
 
 
-void waterLevelReached(Motor* mainMotor, Motor* auxMotor) {
+void waterLevelReached(const Motor* mainMotor, const Motor* auxMotor) {
   motorTurnOff(mainMotor);
   motorTurnOff(auxMotor);
 }
@@ -27,23 +27,23 @@ void changeTargetWeight(long* targetWeight, const long newTargetWeight, bool* we
 }
 
 
-void controlWaterLevel(long targetWeight, HX711* scale, Motor* mainMotor, Motor* auxMotor, const long tolerance, bool* weightControl) {
+void controlWaterLevel(long targetWeight, HX711* scale, const Motor* mainMotor, const Motor* auxMotor, const long tolerance, bool* weightControl) {
   long scaleValue = scale->get_units(5);
   if (isWeightReached(targetWeight, scaleValue, tolerance)) {
-    Serial.println("Water level reached");
-    Serial.print("Units: ");
-    Serial.println(scaleValue);
+    //Serial.println("Water level reached");
+    //Serial.print("Units: ");
+    //Serial.println(scaleValue);
     waterLevelReached(mainMotor, auxMotor);
     *weightControl = false;
   } else if (scaleValue < targetWeight) {
-    Serial.println("Filling container...");
-    Serial.print("Units: ");
-    Serial.println(scaleValue);
+    //Serial.println("Filling container...");
+    //Serial.print("Units: ");
+    //Serial.println(scaleValue);
     fillContainer(mainMotor, auxMotor);
   } else if (scaleValue > targetWeight) {
-    Serial.println("Emptying container...");
-    Serial.print("Units: ");
-    Serial.println(scaleValue);
+    //Serial.println("Emptying container...");
+    //Serial.print("Units: ");
+    //Serial.println(scaleValue);
     emptyContainer(mainMotor, auxMotor);
   }
 }

@@ -39,12 +39,16 @@ void setup() {
   my_instrument.SetCommandTreeBase(F("TANK:LEVEL"));
   my_instrument.RegisterCommand(F(":INC"), &increaseLevel);
   my_instrument.RegisterCommand(F(":DEC"), &decreaseLevel);
-  my_instrument.RegisterCommand(F(":CAL"), &calibrate);
+  my_instrument.RegisterCommand(F(":STOP"), &waterLevelReached);
   my_instrument.RegisterCommand(F(":UNITS?"), &getUnits);
+  my_instrument.RegisterCommand(F(":TARGETWEIGHT?"), &getTargetWeight);
+  my_instrument.RegisterCommand(F(":TARGETWEIGHT"), &setTargetWeight);
 
   setScalePins(&scale, dataPin, clockPin);
   setMotorPins(&mainMotor);
   setMotorPins(&auxMotor);
+
+  calibrateScale(&scale);
 }
 
 
@@ -59,20 +63,37 @@ void loop() {
 
 void increaseLevel(SCPI_C commands, SCPI_P parameters, Stream& interface) {
   fillContainer(&mainMotor, &auxMotor);
+  weightControl = false;
 }
 
 
 void decreaseLevel(SCPI_C commands, SCPI_P parameters, Stream& interface) {
   emptyContainer(&mainMotor, &auxMotor);
+  weightControl = false;
 }
 
 
-void calibrate(SCPI_C commands, SCPI_P parameters, Stream& interface) {
-  calibrateScale(&scale);
+void waterLevelReached(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  waterLevelReached(&mainMotor, &auxMotor);
+  weightControl = false;
 }
 
 
 void getUnits(SCPI_C commands, SCPI_P parameters, Stream& interface) {
   interface.print("Units: ");
   interface.println(scale.get_units(10));
+}
+
+
+void getTargetWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  interface.print("Target Weight: ");
+  interface.println(targetWeight);
+}
+
+
+void setTargetWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  if (parameters.Size() > 0) {
+    targetWeight = constrain(String(parameters[0]).toInt(), -300, 900);
+  }
+  weightControl = true;
 }

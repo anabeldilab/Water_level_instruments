@@ -6,23 +6,15 @@ void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin) {
 
 
 void calibrateScale(HX711* scale) {
-  Serial.println("\nPut 210gr in the scale, press enter to continue");
-  while(!Serial.available());
-  while(Serial.available()) Serial.read();
-  scale->set_scale(210);
-
-  Serial.println("\nPut an empty container in the scale, press enter to continue");
-  while(!Serial.available());
-  while(Serial.available()) Serial.read();
-
-  scale->tare(20);
-  Serial.print("UNITS: ");
-  Serial.println(scale->get_units(10));
+  //Serial.print("Lectura del valor del ADC:  ");
+  //Serial.println(scale->read());
+  //Serial.println("No ponga ningun  objeto sobre la scale");
+  //Serial.println("Destarando...");
+  //Serial.println("...");
+  scale->set_scale(742.752312); // Establecemos la escala  ATENCIÓN 
+  scale->tare(20);  //El peso actual es considerado Tara.
   
-
-  Serial.println("\nScale is Scaled, press enter to continue");
-  while(!Serial.available());
-  while(Serial.available()) Serial.read();
+  //Serial.println("Listo para pesar");  
 }
 
 bool isWeightReached(long targetWeight, long scaleValue, long tolerance) {
