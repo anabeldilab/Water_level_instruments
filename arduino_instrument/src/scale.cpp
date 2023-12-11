@@ -5,7 +5,7 @@ void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin) {
 }
 
 
-void calibrateScale(HX711* scale) {
+void tareScale(HX711* scale) {
   //Serial.print("Lectura del valor del ADC:  ");
   //Serial.println(scale->read());
   //Serial.println("No ponga ningun  objeto sobre la scale");

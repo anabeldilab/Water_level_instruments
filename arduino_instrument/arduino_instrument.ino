@@ -43,12 +43,13 @@ void setup() {
   my_instrument.RegisterCommand(F(":UNITS?"), &getUnits);
   my_instrument.RegisterCommand(F(":TARGETWEIGHT?"), &getTargetWeight);
   my_instrument.RegisterCommand(F(":TARGETWEIGHT"), &setTargetWeight);
+  my_instrument.RegisterCommand(F(":TARE"), &tareScale);
 
   setScalePins(&scale, dataPin, clockPin);
   setMotorPins(&mainMotor);
   setMotorPins(&auxMotor);
 
-  calibrateScale(&scale);
+  tareScale(&scale);
 }
 
 
@@ -96,4 +97,9 @@ void setTargetWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) {
     targetWeight = constrain(String(parameters[0]).toInt(), -300, 900);
   }
   weightControl = true;
+}
+
+
+void tareScale(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  tareScale(&scale);
 }

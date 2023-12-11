@@ -5,7 +5,7 @@ void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin);
 
 void getCurrentUnits(HX711* scale);
 
-void calibrateScale(HX711* scale);
+void tareScale(HX711* scale);
 
 bool isWeightReached(long targetWeight, long scaleValue, long tolerance);
 
