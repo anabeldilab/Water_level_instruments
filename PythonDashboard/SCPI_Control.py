@@ -1,7 +1,7 @@
 import serial
 import time
 
-COM = 'COM7'
+COM = 'COM4'
 BAUD = 9600
 ser = serial.Serial(COM, BAUD)
 time.sleep(4)
@@ -108,7 +108,7 @@ print("Getting units... ")
 response = SCPI_Arduino('UNITS?')
 if response is not None:
     print(">> " + response) 
-'''
+
 
 while (True):
     print("Enter command: ")
@@ -122,3 +122,4 @@ while (True):
 #time.sleep(5)
 
 #SCPI_Arduino("STOP")
+'''

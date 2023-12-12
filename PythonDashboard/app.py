@@ -43,5 +43,16 @@ def update_indicators(btn_llenar, btn_vaciar, btn_parar):
     # Estado inicial (todo apagado)
     return style_off, style_off
 
+@callback(
+    Output("indicador-medidas", "children"),
+    [Input("boton-tarar", "n_clicks"),
+     Input("boton-escalar", "n_clicks")]
+)
+def scale_control(btn_tarar, btn_escalar):
+    if "boton-tarar" == ctx.triggered_id:
+        SCPI_Arduino('TARE')
+    elif "boton-escalar" == ctx.triggered_id:
+        SCPI_Arduino('CHANGEUNITS')
+
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, use_reloader=False)
