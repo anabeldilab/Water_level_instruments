@@ -1,32 +1,34 @@
-#include "..\include\scale.h"
+#include <Arduino.h>
+#include <HX711.h>
 
-void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin) {
-  scale->begin(dataPin, clockPin);
+#include "../include/scale.h"
+#include "../include/motor.h"
+
+HX711 scale;
+long scaleMock = 400;
+
+long targetWeight = 0; 
+long maxWeight = 1000;
+
+void setScalePins() {
+  scale.begin(dataPin, clockPin);
 }
 
-
-void tareScale(HX711* scale) {
-  //Serial.print("Lectura del valor del ADC:  ");
-  //Serial.println(scale->read());
-  //Serial.println("No ponga ningun  objeto sobre la scale");
-  //Serial.println("Destarando...");
-  //Serial.println("...");
-  scale->set_scale(742.752312); // Establecemos la escala  ATENCIÓN 
-  scale->tare(20);  //El peso actual es considerado Tara.
-  
-  //Serial.println("Listo para pesar");  
+void tareScale() {
+  scale.set_scale(742.752312); // Establecemos la escala  ATENCIÓN 
+  scale.tare(20);  //El peso actual es considerado Tara.
 }
 
-bool isWeightReached(long targetWeight, long scaleValue, long tolerance) {
-  if (scaleValue >= targetWeight - tolerance && scaleValue <= targetWeight + tolerance) {
+bool isWeightReached(long scaleValue) {
+  if (scaleValue >= targetWeight - TOLERANCE && scaleValue <= targetWeight + TOLERANCE) {
     return true;
   } 
   return false;
 }
 
-void debugScale(HX711* scale, const uint8_t PinIN1, const uint8_t PinIN2, const uint8_t PinIN3, const uint8_t PinIN4) {
+void debugScale() {
     Serial.print("ScaleValue ");
-    Serial.println(scale->get_units()); 
+    Serial.println(scale.get_units()); 
     Serial.print("PinIN1 vaciado: ");
     Serial.println(digitalRead(PinIN1));
     Serial.print("PinIN2 vaciado: ");

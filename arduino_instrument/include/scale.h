@@ -1,12 +1,21 @@
-#include <Arduino.h>
-#include <HX711.h>
+class HX711;
 
-void setScalePins(HX711* scale, const uint8_t dataPin, const uint8_t clockPin);
+// Scale
+const uint8_t dataPin = 10;
+const uint8_t clockPin = 11; //SCK
 
-void getCurrentUnits(HX711* scale);
+// Scale tolerance
+const uint8_t TOLERANCE = 5;
 
-void tareScale(HX711* scale);
+// Scale 
+extern HX711 scale;
+extern long scaleMock;
 
-bool isWeightReached(long targetWeight, long scaleValue, long tolerance);
+extern long targetWeight; 
+extern long maxWeight;
 
-void debugScale(HX711* scale, const uint8_t PinIN1, const uint8_t PinIN2, const uint8_t PinIN3, const uint8_t PinIN4);
+void setScalePins();
+void getCurrentUnits();
+void tareScale();
+bool isWeightReached(long scaleValue);
+void debugScale();
