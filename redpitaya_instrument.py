@@ -51,3 +51,7 @@ print(attenuation)
 plot.plot(buff)
 plot.ylabel('Voltage')
 plot.show()
+
+def RC_circuit_Value():
+    return attenuation
+
