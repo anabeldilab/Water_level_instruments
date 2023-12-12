@@ -1,13 +1,10 @@
-#include <Arduino.h>
-#include "HX711.h"
+extern bool weightControl;
 
-struct Motor;
+void emptyContainer();
+void fillContainer();
+void waterLevelReached();
 
-void emptyContainer(const Motor* mainMotor, const Motor* auxMotor);
-void fillContainer(const Motor* mainMotor, const Motor* auxMotor);
-void waterLevelReached(const Motor* mainMotor, const Motor* auxMotor);
+void changeTargetWeight(const long newTargetWeight);
 
-void changeTargetWeight(long* targetWeight, const long newTargetWeight, bool* weightControl);
-
-void controlWaterLevel(long targetWeight, HX711* scale, const Motor* mainMotor, const Motor* auxMotor, const long tolerance, bool* weightControl);
-void mockControlWaterLevel(long targetWeight, long scaleMock, const long tolerance);
+void controlWaterLevel();
+void mockControlWaterLevel();
