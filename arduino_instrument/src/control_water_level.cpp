@@ -32,7 +32,7 @@ void changeTargetWeight(const long newTargetWeight) {
 
 
 void controlWaterLevel() {
-  long scaleValue = scale.get_units(5);
+  long scaleValue = scale.get_units();
 if (isWeightReached(scaleValue) || scaleValue >= maxWeight) {
     waterLevelReached();
     weightControl = false;

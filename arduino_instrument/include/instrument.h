@@ -19,7 +19,7 @@ inline void waterLevelReached(SCPI_C commands, SCPI_P parameters, Stream& interf
 
 
 inline void getUnits(SCPI_C commands, SCPI_P parameters, Stream& interface) {
-  interface.println(scale.get_units(10));
+  interface.println(scale.get_units());
 }
 
 
@@ -27,6 +27,11 @@ inline void setMaxWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) 
   if (parameters.Size() > 0) {
     maxWeight = constrain(String(parameters[0]).toInt(), 0, 10000);
   }
+}
+
+
+inline void getMaxWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  interface.println(maxWeight);
 }
 
 
@@ -48,6 +53,11 @@ inline void tareScale(SCPI_C commands, SCPI_P parameters, Stream& interface) {
 }
 
 
+inline void getWaterLevelReached(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  interface.println(!weightControl);
+}
+
+
 inline void registerCommands() {
   my_instrument.SetCommandTreeBase(F("TANK:LEVEL"));
   my_instrument.RegisterCommand(F(":INC"), &increaseLevel);
@@ -55,7 +65,9 @@ inline void registerCommands() {
   my_instrument.RegisterCommand(F(":STOP"), &waterLevelReached);
   my_instrument.RegisterCommand(F(":UNITS?"), &getUnits);
   my_instrument.RegisterCommand(F(":MAXWEIGHT"), &setMaxWeight);
+  my_instrument.RegisterCommand(F(":MAXWEIGHT?"), &getMaxWeight);
   my_instrument.RegisterCommand(F(":TARGETWEIGHT?"), &getTargetWeight);
   my_instrument.RegisterCommand(F(":TARGETWEIGHT"), &setTargetWeight);
+  my_instrument.RegisterCommand(F(":WATERLEVELREACHED?"), &getWaterLevelReached);
   my_instrument.RegisterCommand(F(":TARE"), &tareScale);
 }

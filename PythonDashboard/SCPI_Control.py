@@ -17,6 +17,8 @@ CommandList = {
     'TARGETWEIGHT': 'TANK:LEVEL:TARGETWEIGHT',
     'TARE': 'TANK:LEVEL:TARE',
     'MAXWEIGHT' : 'TANK:LEVEL:MAXWEIGHT',
+    'MAXWEIGHT?' : 'TANK:LEVEL:MAXWEIGHT?',
+    'WATERLEVELREACHED?' : 'TANK:LEVEL:WATERLEVELREACHED?',
 }
 
 
@@ -39,15 +41,11 @@ def SCPI_Arduino(command_input):
         ser.write(command_bytes)
 
         if (short_command.endswith('?')):
-            time.sleep(1)
-
-            out = ''
-            while ser.inWaiting() > 0:
-                out += ser.read(1).decode('UTF-8')
-            if out != '':
-                return out
+            out = ser.readline().decode('UTF-8').strip()  # Lee una línea completa
+            return out
     else:
         return "Invalid command"
+
 '''
 print("Getting units... ")
 response = ''

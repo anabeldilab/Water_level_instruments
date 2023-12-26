@@ -33,18 +33,18 @@ def setup_tab():
             dbc.Col(width=6, children=[
                 dbc.Card([
                     dbc.CardBody([
-                        html.H5("Medidas", className="card-title", style={"text-align": "center"}),
-                        html.Div(id="indicador-medidas"),
+                        html.H5("Current Units", className="card-title", style={"text-align": "center"}),
+                        html.Div(id="current-units-indicator"),
                         dash_table.DataTable(
-                            id='tabla-medidas',
+                            id='current-units-measures',
                             columns=[
-                                {"name": "Medida", "id": "medida"},
-                                {"name": "Valor", "id": "valor"}
+                                {"name": "Measure", "id": "measure"},
+                                {"name": "Value", "id": "value"}
                             ],
                             data=[
-                                {"medida": "Peso de la Báscula (g)", "valor": ""},
-                                {"medida": "Medida Circuito RC", "valor": ""},
-                                {"medida": "Peso según Circuito RC", "valor": ""}
+                                {"measure": "Peso de la Báscula (g)", "value": ""},
+                                {"measure": "Medida Circuito RC", "value": ""},
+                                {"measure": "Peso según Circuito RC", "value": ""}
                             ],
                             style_table={'overflowX': 'auto'},
                             style_cell={'textAlign': 'center'},
