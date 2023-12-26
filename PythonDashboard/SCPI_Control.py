@@ -38,13 +38,14 @@ def SCPI_Arduino(command_input):
         command_bytes = bytes(full_command, 'UTF-8')
         ser.write(command_bytes)
 
-        time.sleep(1)
+        if (short_command.endswith('?')):
+            time.sleep(1)
 
-        out = ''
-        while ser.inWaiting() > 0:
-            out += ser.read(1).decode('UTF-8')
-        if out != '':
-            return out
+            out = ''
+            while ser.inWaiting() > 0:
+                out += ser.read(1).decode('UTF-8')
+            if out != '':
+                return out
     else:
         return "Invalid command"
 '''

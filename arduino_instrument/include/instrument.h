@@ -19,7 +19,6 @@ inline void waterLevelReached(SCPI_C commands, SCPI_P parameters, Stream& interf
 
 
 inline void getUnits(SCPI_C commands, SCPI_P parameters, Stream& interface) {
-  interface.print("Units: ");
   interface.println(scale.get_units(10));
 }
 
@@ -32,7 +31,6 @@ inline void setMaxWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) 
 
 
 inline void getTargetWeight(SCPI_C commands, SCPI_P parameters, Stream& interface) {
-  interface.print("Target Weight: ");
   interface.println(targetWeight);
 }
 

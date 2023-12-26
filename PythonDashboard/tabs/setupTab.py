@@ -49,7 +49,8 @@ def setup_tab():
                             style_table={'overflowX': 'auto'},
                             style_cell={'textAlign': 'center'},
                             style_data={'backgroundColor': 'rgb(50, 50, 50)', 'color': 'white', 'border': '1px white solid'},
-                            style_header={'backgroundColor': 'rgb(30, 30, 30)', 'fontWeight': 'bold', 'border': '1px white solid'}
+                            style_header={'backgroundColor': 'rgb(30, 30, 30)', 'fontWeight': 'bold', 'border': '1px white solid'},
+                            cell_selectable=False
                         )
                     ])
                 ]),
