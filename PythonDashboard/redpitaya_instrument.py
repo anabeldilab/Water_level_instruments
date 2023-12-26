@@ -40,6 +40,8 @@ def RC_circuit_value():
     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
     buff = list(map(float, buff_string))
 
+    buff = [val - sum(buff) / len(buff) for val in buff]
+
     abs_buff = [abs(val) for val in buff]
 
     avg_read_sine = sum(abs_buff) / len(abs_buff)
