@@ -1,6 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
-from dash import callback, Output, Input, ctx, dcc
+from dash import callback, Output, Input, ctx, dcc, State
 from tabs import setupTab
 from tabs import calibrationRCTab
 from tabs import controlTab
@@ -11,8 +11,6 @@ import plotly.graph_objects as go
 
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.DARKLY])
 
-calibrationList = []
-
 app.layout = dbc.Container([
     dbc.Tabs([
         dbc.Tab(setupTab.setup_tab(), label = "Setup", tab_id = 'tab-1'),
@@ -21,42 +19,32 @@ app.layout = dbc.Container([
     ], id = 'tabs', active_tab = 'tab-1'),
     dcc.Interval(
         id = 'interval-setup',
-        interval = 3*1000, # in milliseconds
+        interval = 3 * 1000, # in milliseconds
         n_intervals = 0,
         max_intervals = -1
     ),
     dcc.Interval(
         id = 'interval-calibration',
-        interval = 3*1000, # in milliseconds
+        interval = 3 * 1000, 
         n_intervals = 0,
-        max_intervals = -1
-    )
+        max_intervals = 0
+    ),
 ], fluid = True)
 
 
 @callback(
-    Output('interval-setup', 'max_intervals'),
+    [Output('interval-setup', 'max_intervals'),
+     Output('interval-calibration', 'max_intervals')],
     [Input('tabs', 'active_tab')]
 )
 def stop_intervals(active_tab):
+    print(active_tab)
     if active_tab == 'tab-1':
-        return -1
+        return -1, 0
+    elif active_tab == 'tab-2':
+        return 0, -1
     else:
-        return 0
-    
-
-@callback(
-    Output('interval-calibration', 'max_intervals'),
-    [Input('tabs', 'active_tab'),
-     Input("calib-run-button", "n_clicks"),
-     Input("calib-stop-button", "n_clicks")]
-)
-def stop_intervals(active_tab, btn_run, btn_stop):
-    if active_tab == 'tab-2' and btn_run == ctx.triggered_id:
-        calibrationTest(50) # 10 samples, el valor hay que pillarlo del input
-        return -1
-    elif btn_stop == ctx.triggered_id or active_tab != 'tab-2':
-        return 0
+        return 0, 0
 
 
 @callback(
@@ -71,12 +59,9 @@ def update_indicators(btn_llenar, btn_vaciar, btn_parar):
     style_on = {"height": "10px", "background-color": "green", "margin-bottom": "10px"}
     style_off = {"height": "10px", "background-color": "transparent", "margin-bottom": "10px"}
 
-    # Si se presiona 'Parar Bomba', apaga todos los indicadores
     if "boton-parar" == ctx.triggered_id:
         SCPI_Arduino('STOP')
         return style_off, style_off
-
-    # Cambia el estilo del indicador según el botón presionado
     if "boton-llenar" == ctx.triggered_id:
         SCPI_Arduino('INC')
         return style_on, style_off
@@ -84,12 +69,11 @@ def update_indicators(btn_llenar, btn_vaciar, btn_parar):
         SCPI_Arduino('DEC')
         return style_off, style_on
 
-    # Estado inicial (todo apagado)
     return style_off, style_off
 
 
 @callback(
-    Output("indicador-medidas", "children"),
+    Output("current-units-indicator", "children"),
     [Input("boton-tarar", "n_clicks"),
      Input("boton-escalar", "n_clicks")]
 )
@@ -101,12 +85,12 @@ def scale_control(btn_tarar, btn_escalar):
 
 
 @callback(
-    Output("tabla-medidas", "data"),
+    Output("current-units-measures", "data"),
     [Input('interval-setup', 'n_intervals')]
 )
-def update_indicators(n_intervals):
+def update_table(n_intervals):
     with ThreadPoolExecutor(max_workers=2) as executor:
-        future_units = executor.submit(SCPI_Arduino('UNITS?'))
+        future_units = executor.submit(SCPI_Arduino, 'UNITS?')
         future_RC_value = executor.submit(RC_circuit_value)
 
         units = future_units.result()
@@ -114,47 +98,92 @@ def update_indicators(n_intervals):
         na = "NaN"
         print(units, RC_value)
         return [
-            {"medida": "Peso de la Báscula (g)", "valor": units},
-            {"medida": "Medida Circuito RC", "valor": RC_value},
-            {"medida": "Peso según Circuito RC", "valor": na},
+            {"measure": "Peso de la Báscula (g)", "value": units},
+            {"measure": "Medida Circuito RC", "value": RC_value},
+            {"measure": "Peso según Circuito RC", "value": na},
         ]
 
+calibrationList = []
+
+@callback(
+    Output("calib-sample-size", "value"),
+    Output("calib-graph", "figure"),
+    Input("calib-run-button", "n_clicks"),
+    State("calib-sample-size", "value"),
+    prevent_initial_call = True
+)
+def update_graph(n_clicks, sample_size):
+    if sample_size is None or sample_size <= 0:
+        sample_size = 5
+
+    global calibrationList
+    calibrationTest(sample_size, calibrationList)
+
+    graph_data = [
+        go.Scatter(x = [item[0] for item in calibrationList], y = [item[1] for item in calibrationList], mode = 'lines+markers')
+    ]
+    figure = {'data': graph_data}
+
+    return sample_size, figure
+
+# TODO Manage Stop button
+
+@callback(
+    Output("calibration-modal", "is_open"),
+    [Input("calib-run-button", "n_clicks"), 
+     Input("close-modal", "n_clicks")],
+    [State("calibration-modal", "is_open")],
+)
+def toggle_modal(run_btn, close_modal, is_open):
+    if run_btn or close_modal:
+        return not is_open
+    return is_open
 
 
 @callback(
-    Output("calib-graph", "figure"),
+    Output('graph-units-table', 'data'),
     [Input('interval-calibration', 'n_intervals')]
 )
-def update_indicators(n_intervals):
-    calibrationList = []  # Assuming calibrationList is defined somewhere in your code
-    # Plot calibrationList data in graph
-    x_values = [data[0] for data in calibrationList]
-    y_values = [data[1] for data in calibrationList]
-    fig = go.Figure(data=go.Scatter(x=x_values, y=y_values, mode='markers'))
-    
-    return fig
-    
+def update_graph_units_table(n_intervals):
+    formatted_data = [{'weight': pair[0], 'rc-value': pair[1]} for pair in calibrationList]
 
-def calibrationTest(sample):
-    SCPI_Arduino('TARGETWEIGHT' + str(0))
-    if SCPI_Arduino('UNITS?') < str(0):
-        SCPI_Arduino('TARE')
-    while SCPI_Arduino('UNITS?') > str(0):
-        SCPI_Arduino('DEC')
-    SCPI_Arduino('STOP')
+    return formatted_data
 
-    maxWeight = SCPI_Arduino('MAXWEIGHT?')
-    step = maxWeight / sample
 
-    for i in range(sample):
-        SCPI_Arduino('TARGETWEIGHT' + str(step * i))
-        while SCPI_Arduino('UNITS?') < str(step * i):
-            pass
-        RCValue = RC_circuit_value()
-        Weight = SCPI_Arduino('UNITS?')
-        calibrationList.append([RCValue, Weight])
+def calibrationTest(sample_size, calibrationList):
+    with ThreadPoolExecutor(max_workers = 2) as executor:
 
-        
+        units = SCPI_Arduino('UNITS?')
+        if isinstance(units, (int, float)) and units < 0:
+            SCPI_Arduino('TARE')
+
+        wait_for_water_level_to_reach(0)
+
+        maxWeight = SCPI_Arduino('MAXWEIGHT?') or 500
+        step = float(maxWeight) / sample_size
+
+
+        print("Calibrating with " + str(sample_size) + " samples")
+
+        for i in range(sample_size + 1):
+            print("Target Weight: " + str(step * i))
+            wait_for_water_level_to_reach(step * i)
+            future_units = executor.submit(SCPI_Arduino, 'UNITS?')
+            future_RC_value = executor.submit(RC_circuit_value)
+            Weight = future_units.result()
+            RCValue = future_RC_value.result()
+            print("Weight: " + str(Weight) + " RCValue: " + str(RCValue))
+            calibrationList.append([Weight, RCValue])
+
+
+def wait_for_water_level_to_reach(target_level):
+    SCPI_Arduino('TARGETWEIGHT ' + str(target_level))
+    waterLevelReached = SCPI_Arduino('WATERLEVELREACHED?')
+    print("Water Level Reached: " + waterLevelReached)
+    while waterLevelReached != '1':
+        waterLevelReached = SCPI_Arduino('WATERLEVELREACHED?')
+    print("Water Level Reached: " + waterLevelReached)
+
 
 if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug = True, use_reloader = False)
