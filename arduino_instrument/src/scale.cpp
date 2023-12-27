@@ -8,7 +8,7 @@ HX711 scale;
 long scaleMock = 400;
 
 long targetWeight = 0; 
-long maxWeight = 1000;
+long maxWeight = 650;
 
 void setScalePins() {
   scale.begin(dataPin, clockPin);
