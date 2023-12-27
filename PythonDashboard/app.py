@@ -103,11 +103,13 @@ def update_table(n_intervals):
             {"measure": "Peso según Circuito RC", "value": na},
         ]
 
+
 calibrationList = []
+stop_calibration = False
+
 
 @callback(
     Output("calib-sample-size", "value"),
-    Output("calib-graph", "figure"),
     Input("calib-run-button", "n_clicks"),
     State("calib-sample-size", "value"),
     prevent_initial_call = True
@@ -117,16 +119,26 @@ def update_graph(n_clicks, sample_size):
         sample_size = 5
 
     global calibrationList
+    calibrationList = []
     calibrationTest(sample_size, calibrationList)
 
+    return sample_size
+
+
+@callback(
+    Output("calib-graph", "figure"),
+    Input("interval-calibration", "n_intervals"),
+    prevent_initial_call = True
+)
+def update_graph(n_intervals):
+    if (stop_calibration):
+        return {'data': []}
     graph_data = [
         go.Scatter(x = [item[0] for item in calibrationList], y = [item[1] for item in calibrationList], mode = 'lines+markers')
     ]
     figure = {'data': graph_data}
+    return figure
 
-    return sample_size, figure
-
-# TODO Manage Stop button
 
 @callback(
     Output("calibration-modal", "is_open"),
@@ -135,7 +147,9 @@ def update_graph(n_clicks, sample_size):
     [State("calibration-modal", "is_open")],
 )
 def toggle_modal(run_btn, close_modal, is_open):
+    global stop_calibration
     if run_btn or close_modal:
+        stop_calibration = True if close_modal else False
         return not is_open
     return is_open
 
@@ -152,7 +166,7 @@ def update_graph_units_table(n_intervals):
 
 def calibrationTest(sample_size, calibrationList):
     with ThreadPoolExecutor(max_workers = 2) as executor:
-
+        global stop_calibration
         units = SCPI_Arduino('UNITS?')
         if isinstance(units, (int, float)) and units < 0:
             SCPI_Arduino('TARE')
@@ -168,6 +182,10 @@ def calibrationTest(sample_size, calibrationList):
         for i in range(sample_size + 1):
             print("Target Weight: " + str(step * i))
             wait_for_water_level_to_reach(step * i)
+            if stop_calibration:
+                print("Calibration stopped by user")
+                calibrationList.clear()
+                break
             future_units = executor.submit(SCPI_Arduino, 'UNITS?')
             future_RC_value = executor.submit(RC_circuit_value)
             Weight = future_units.result()
@@ -177,10 +195,15 @@ def calibrationTest(sample_size, calibrationList):
 
 
 def wait_for_water_level_to_reach(target_level):
+    print('TARGETWEIGHT ' + str(target_level))
     SCPI_Arduino('TARGETWEIGHT ' + str(target_level))
     waterLevelReached = SCPI_Arduino('WATERLEVELREACHED?')
     print("Water Level Reached: " + waterLevelReached)
     while waterLevelReached != '1':
+        if stop_calibration:
+            SCPI_Arduino('STOP')
+            print("Calibration stopped water level not reached")
+            break
         waterLevelReached = SCPI_Arduino('WATERLEVELREACHED?')
     print("Water Level Reached: " + waterLevelReached)
 
