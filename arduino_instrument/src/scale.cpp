@@ -14,6 +14,7 @@ void setScalePins() {
   scale.begin(dataPin, clockPin);
 }
 
+
 void tareScale() {
   scale.set_scale(742.752312); // Establecemos la escala  ATENCIÓN 
   scale.tare(20);  //El peso actual es considerado Tara.

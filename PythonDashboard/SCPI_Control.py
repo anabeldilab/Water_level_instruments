@@ -1,7 +1,7 @@
 import serial
 import time
 
-COM = 'COM4'
+COM = 'COM5'
 BAUD = 9600
 ser = serial.Serial(COM, BAUD)
 time.sleep(4)

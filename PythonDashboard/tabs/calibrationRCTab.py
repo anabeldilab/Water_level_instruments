@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 def calibration_tab():
     return html.Div([
         html.H3("Calibración", className = "text-center mb-4"),
-
+        html.Div(id='update-complete-flag', style={'display': 'none'}),
         dbc.Row([
             dbc.Col([
                 dbc.Button("Run", id = "calib-run-button", color = "success", className = "me-2"),

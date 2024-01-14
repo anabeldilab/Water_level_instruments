@@ -1,5 +1,4 @@
 #include "Vrekrer_scpi_parser.h"
-#include <Arduino.h>
 #include "HX711.h"
 
 #include "include/scale.h"

@@ -8,6 +8,9 @@ from concurrent.futures import ThreadPoolExecutor
 from SCPI_Control import SCPI_Arduino
 from redpitaya_instrument import RC_circuit_value
 import plotly.graph_objects as go
+import numpy as np
+from scipy.optimize import curve_fit, root_scalar
+import time
 
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.DARKLY])
 
@@ -95,17 +98,23 @@ def update_table(n_intervals):
 
         units = future_units.result()
         RC_value = future_RC_value.result()
-        na = "NaN"
+        if optimized_rc_params is not None:
+            RC_Weight = find_weight_for_rc(RC_value, *optimized_rc_params)
+        else:
+            RC_Weight = "NaN"
+
         print(units, RC_value)
         return [
             {"measure": "Peso de la Báscula (g)", "value": units},
             {"measure": "Medida Circuito RC", "value": RC_value},
-            {"measure": "Peso según Circuito RC", "value": na},
+            {"measure": "Peso según Circuito RC", "value": RC_Weight},
         ]
 
 
 calibrationList = []
 stop_calibration = False
+calibration_complete = False
+optimized_rc_params = None
 
 
 @callback(
@@ -126,31 +135,68 @@ def update_graph(n_clicks, sample_size):
 
 
 @callback(
+    Output('update-complete-flag', 'children'),
+    [Input('interval-calibration', 'n_intervals')],
+    [State("calib-sample-size", "value")]
+)
+def complete_calibration(n_clicks, sample_size):
+    if sample_size is None or not isinstance(sample_size, int):
+        sample_size = 5
+
+    if len(calibrationList) >= sample_size + 1:
+        return "Complete"
+    return "Incomplete"
+
+
+@callback(
     Output("calib-graph", "figure"),
-    Input("interval-calibration", "n_intervals"),
+    [Input("interval-calibration", "n_intervals"),
+    Input("calib-adjust-button", "n_clicks")],
     prevent_initial_call = True
 )
-def update_graph(n_intervals):
+def update_graph(n_intervals, n_clicks):
+    global stop_calibration, optimized_rc_params
+    figure = {'data': []}
     if (stop_calibration):
+        optimized_rc_params = None
         return {'data': []}
-    graph_data = [
-        go.Scatter(x = [item[0] for item in calibrationList], y = [item[1] for item in calibrationList], mode = 'lines+markers')
-    ]
-    figure = {'data': graph_data}
+    elif (n_clicks):
+        initial_guesses = [1, 0.01, 1] 
+
+        x = np.array([item[0] for item in calibrationList], dtype=float)
+        y = np.array([item[1] for item in calibrationList], dtype=float)
+
+        optimized_rc_params, pcov = curve_fit(exp_func, x, y, p0=initial_guesses)
+
+        predicted_rc_values = exp_func(x, *optimized_rc_params)
+
+        graph_data = [
+            go.Scatter(x = x, y = y, mode = 'lines+markers', name = 'Mediciones'),
+            go.Scatter(x = x, y = predicted_rc_values, mode = 'lines', name = 'Ajuste'),
+        ]
+        figure = {'data': graph_data}
+    else:
+        graph_data = [
+            go.Scatter(x = [item[0] for item in calibrationList], y = [item[1] for item in calibrationList], mode = 'lines+markers')
+        ]
+        figure = {'data': graph_data}
     return figure
 
 
 @callback(
     Output("calibration-modal", "is_open"),
-    [Input("calib-run-button", "n_clicks"), 
-     Input("close-modal", "n_clicks")],
-    [State("calibration-modal", "is_open")],
+    [Input("calib-run-button", "n_clicks"),
+     Input("close-modal", "n_clicks"),
+     Input('update-complete-flag', 'children')],
+    [State("calibration-modal", "is_open")]
 )
-def toggle_modal(run_btn, close_modal, is_open):
-    global stop_calibration
-    if run_btn or close_modal:
-        stop_calibration = True if close_modal else False
-        return not is_open
+def toggle_modal(run_btn, close_modal, update_status, is_open):
+    if update_status == "Complete" and is_open:
+        return False
+    elif "calib-run-button" == ctx.triggered_id and not is_open:
+        return True
+    elif "close-modal" == ctx.triggered_id and is_open:
+        return False
     return is_open
 
 
@@ -159,6 +205,9 @@ def toggle_modal(run_btn, close_modal, is_open):
     [Input('interval-calibration', 'n_intervals')]
 )
 def update_graph_units_table(n_intervals):
+    global stop_calibration
+    if (stop_calibration):
+        return {'weight': [], 'rc-value': []}
     formatted_data = [{'weight': pair[0], 'rc-value': pair[1]} for pair in calibrationList]
 
     return formatted_data
@@ -167,17 +216,23 @@ def update_graph_units_table(n_intervals):
 def calibrationTest(sample_size, calibrationList):
     with ThreadPoolExecutor(max_workers = 2) as executor:
         global stop_calibration
-        units = SCPI_Arduino('UNITS?')
-        if isinstance(units, (int, float)) and units < 0:
-            SCPI_Arduino('TARE')
 
-        wait_for_water_level_to_reach(0)
+        units_str = SCPI_Arduino('UNITS?')
+        print("Units: " + str(units_str))
+
+        try:
+            units = float(units_str)
+            if units < 0:
+                SCPI_Arduino('TARE')
+        except (TypeError, ValueError):
+            print("No se pudo convertir 'units' a un número.")
 
         maxWeight = SCPI_Arduino('MAXWEIGHT?') or 500
         step = float(maxWeight) / sample_size
-
+        step = round(step, 2)
 
         print("Calibrating with " + str(sample_size) + " samples")
+        print("Step number: " + str(step))
 
         for i in range(sample_size + 1):
             print("Target Weight: " + str(step * i))
@@ -207,6 +262,19 @@ def wait_for_water_level_to_reach(target_level):
         waterLevelReached = SCPI_Arduino('WATERLEVELREACHED?')
     print("Water Level Reached: " + waterLevelReached)
 
+
+# Definición de la función de ajuste exponencial
+def exp_func(x, a, b, c):
+    return a * np.exp(-b * x) + c
+
+
+def find_weight_for_rc(y, a, b, c):
+    func = lambda x: exp_func(x, a, b, c) - y
+    try:
+        return root_scalar(func, method='newton', x0=0).root
+    except Exception as e:
+        print("Error al encontrar el peso para el valor RC:", e)
+        return None
 
 if __name__ == '__main__':
     app.run_server(debug = True, use_reloader = False)
