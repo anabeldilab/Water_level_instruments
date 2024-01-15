@@ -1,0 +1,7 @@
+numpy
+matplotlib
+dash
+dash-bootstrap-components
+dash-daq
+scipy
+pyserial
