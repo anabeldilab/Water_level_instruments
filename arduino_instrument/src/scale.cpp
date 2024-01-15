@@ -10,18 +10,21 @@ long scaleMock = 400;
 long targetWeight = 0; 
 long maxWeight = 650;
 
+uint8_t scaleTolerance = 5;
+float scaleFactor = 742.752312;
+
 void setScalePins() {
   scale.begin(dataPin, clockPin);
 }
 
 
 void tareScale() {
-  scale.set_scale(742.752312); // Establecemos la escala  ATENCIÓN 
+  scale.set_scale(scaleFactor); // Establecemos la escala  ATENCIÓN 
   scale.tare(20);  //El peso actual es considerado Tara.
 }
 
 bool isWeightReached(long scaleValue) {
-  if (scaleValue >= targetWeight - TOLERANCE && scaleValue <= targetWeight + TOLERANCE) {
+  if (scaleValue >= targetWeight - scaleTolerance && scaleValue <= targetWeight + scaleTolerance) {
     return true;
   } 
   return false;

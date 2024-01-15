@@ -11,6 +11,10 @@ freq = 2000
 ampl = 1
 min_level = 0.013871513306939288
 
+def set_rc_circuit_frequency(newFreq):
+    global freq
+    freq = newFreq
+
 def RC_circuit_value():
     # Generation
     rp_s.tx_txt('GEN:RST')

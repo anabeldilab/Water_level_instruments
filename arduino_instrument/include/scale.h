@@ -4,8 +4,11 @@ class HX711;
 const uint8_t dataPin = 10;
 const uint8_t clockPin = 11; //SCK
 
-// Scale tolerance
-const uint8_t TOLERANCE = 5;
+// Scale Tolerance
+extern uint8_t scaleTolerance;
+
+// Scale Factor
+extern float scaleFactor;
 
 // Scale 
 extern HX711 scale;

@@ -6,9 +6,9 @@ def control_auto_tab():
     return html.Div([
         html.H3("Control Automático", className="text-center mb-4"),
 
-        dbc.Row([  # Una sola fila para todas las columnas
-            dbc.Col([  # Columna para Selección del Sensor y Fijación de Consigna
-                dbc.Row([  # Subfila para Selección del Sensor
+        dbc.Row([ 
+            dbc.Col([
+                dbc.Row([
                     html.Label("Selección del Sensor"),
                     dcc.Dropdown(
                         id="sensor-dropdown",
@@ -17,10 +17,11 @@ def control_auto_tab():
                             {"label": "Condensador", "value": "condensador"}
                         ],
                         value="bascula",
+                        clearable=False,
                         style={'color': 'black'}
                     ),
                 ], style={"margin-bottom": "60px", "margin-left": "20px", "margin-right": "20px",}),
-                dbc.Row([  # Subfila para Fijación de Consigna
+                dbc.Row([ 
                     html.Label("Fijación de Consigna"),
                     dcc.Input(id="consigna-input", type="number", placeholder="Consigna", className="form-control"),
                 ], style={"margin-bottom": "60px", "margin-left": "20px", "margin-right": "20px"}),
@@ -34,7 +35,7 @@ def control_auto_tab():
                     dbc.Button("Stop", id="control-stop-button", color="danger", className="me-2"),
                 ], style={"margin-bottom": "30px", "margin-left": "20px", "margin-right": "20px"}),
             ], width=4),
-            dbc.Col([  # Columna para Indicadores de Estado
+            dbc.Col([
                 dbc.Row([
                     dbc.Col([
                         html.Div([
@@ -54,26 +55,70 @@ def control_auto_tab():
                         dcc.Graph(
                             id = "control-graph",
                             figure = {
-                                'data': [],
+                                'data': [
+                                    {'time': [], 'weight': []}
+                                ],
                                 'layout': {
                                     'xaxis': {'title': 'Tiempo (s)'},
                                     'yaxis': {'title': 'Peso'},
                                 }
                             },
                             config={
-                                'staticPlot': True,  # Deshabilita zoom, paneo, etc.
-                                'displayModeBar': False  # Oculta la barra de herramientas del gráfico
+                                'staticPlot': True,
+                                'displayModeBar': False 
                             }
                         ),
                     ], width=9),
                 ], className="mb-3", style={"margin-bottom": "10px"}),
-                dbc.Row([  # Subfila para mostrar datos
+                dbc.Row([
                     dbc.Col([
-                        html.Label("Datos del Sistema"),
-                        dcc.Input(id="datos-sistema", type="number", placeholder="Datos", className="form-control"),
-                    ]),
-                ]),
-                    
+                        html.Label("Consigna actual:"),
+                        dcc.Markdown(
+                            id="current_setpoint", 
+                            children="", 
+                            style={
+                                'backgroundColor': 'white', 
+                                'textAlign': 'center',
+                                'color': 'black',
+                                'height': '70px',
+                                'borderRadius': '15px',
+                                'padding': '10px',
+                                'overflowY': 'auto'
+                            })
+                    ], width=4),
+
+                    dbc.Col([
+                        html.Label("Peso actual:"),
+                        dcc.Markdown(
+                            id="current_weight", 
+                            children="", 
+                            style={
+                                'backgroundColor': 'white', 
+                                'textAlign': 'center',
+                                'color': 'black',
+                                'height': '70px',
+                                'borderRadius': '15px',
+                                'padding': '10px',
+                                'overflowY': 'auto'
+                            })
+                    ], width=4),
+
+                    dbc.Col([
+                        html.Label("Error actual:"),
+                        dcc.Markdown(
+                            id="current_error", 
+                            children="", 
+                            style={
+                                'backgroundColor': 'white', 
+                                'textAlign': 'center',
+                                'color': 'black',
+                                'height': '70px',
+                                'borderRadius': '15px',
+                                'padding': '10px',
+                                'overflowY': 'auto'
+                            })
+                    ], width=4)
+                ])  
             ]), 
         ]),
     ])

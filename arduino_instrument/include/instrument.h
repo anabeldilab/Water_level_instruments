@@ -58,6 +58,31 @@ inline void getWaterLevelReached(SCPI_C commands, SCPI_P parameters, Stream& int
 }
 
 
+inline void getScaleTolerance(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  interface.println(scaleTolerance);
+}
+
+
+inline void setScaleTolerance(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  if (parameters.Size() > 0) {
+    scaleTolerance = constrain(String(parameters[0]).toInt(), 0, 1000);
+  }
+}
+
+
+inline void calibrateScale(SCPI_C commands, SCPI_P parameters, Stream& interface) {
+  if (parameters.Size() > 0) {
+    float knownWeight = String(parameters[0]).toFloat();
+    scaleFactor = scale.get_value(10) / knownWeight;
+    scale.set_scale(scaleFactor);
+    if (scale.get_units(5) < 0) {
+      scaleFactor = -scaleFactor;
+      scale.set_scale(scaleFactor);
+    }
+  }
+}
+
+
 inline void registerCommands() {
   my_instrument.SetCommandTreeBase(F("TANK:LEVEL"));
   my_instrument.RegisterCommand(F(":INC"), &increaseLevel);
@@ -70,4 +95,7 @@ inline void registerCommands() {
   my_instrument.RegisterCommand(F(":TARGETWEIGHT"), &setTargetWeight);
   my_instrument.RegisterCommand(F(":WATERLEVELREACHED?"), &getWaterLevelReached);
   my_instrument.RegisterCommand(F(":TARE"), &tareScale);
+  my_instrument.RegisterCommand(F(":TOLERANCE?"), &getScaleTolerance);
+  my_instrument.RegisterCommand(F(":TOLERANCE"), &setScaleTolerance);
+  my_instrument.RegisterCommand(F(":CALIBRATE"), &calibrateScale);
 }

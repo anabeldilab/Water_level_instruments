@@ -45,7 +45,7 @@ if (isWeightReached(scaleValue) || scaleValue >= maxWeight) {
 
 
 void mockControlWaterLevel() {
-  if (scaleMock >= targetWeight - TOLERANCE && scaleMock <= targetWeight + TOLERANCE) {
+  if (scaleMock >= targetWeight - scaleTolerance && scaleMock <= targetWeight + scaleTolerance) {
     Serial.print("ScaleMock ");
     Serial.println(scaleMock); 
   } else if (scaleMock < targetWeight) {

@@ -38,9 +38,9 @@ def calibration_tab():
                     dbc.Card([
                         dbc.CardBody([
                             html.H5("Graph Units", className = "card-title", style = {"text-align": "center"}),
-                            html.Div(id = "graph-units-indicator"),
+                            html.Div(id = "calib-graph-units-indicator"),
                             dash_table.DataTable(
-                                id = 'graph-units-table',
+                                id = 'calib-graph-units-table',
                                 columns = [
                                     {"name": "Peso", "id": "weight"},
                                     {"name": "RC", "id": "rc-value"}
@@ -69,7 +69,10 @@ def calibration_tab():
                     }),
                 dbc.Modal([
                     dbc.ModalBody("Calibrando..."),
-                    dbc.ModalFooter(dbc.Button("Stop", id = "close-modal", color = "danger",  className = "me-2", n_clicks = 0)),
+                    dbc.ModalFooter(
+                        dbc.Button("Stop", id = "close-calib-modal", color = "danger",  className = "me-2", n_clicks = 0),
+                        style={"display": "flex", "justifyContent": "center"}
+                    ),
                 ], id = "calibration-modal", is_open = False),
             ], width = 5)
         ], className = "mb-3"),
