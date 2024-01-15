@@ -3,7 +3,7 @@ import time
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plot
 
-IP = "192.168.1.48"
+IP = "10.209.3.187"
 rp_s = scpi.scpi(IP)
 
 wave_form = 'sine'

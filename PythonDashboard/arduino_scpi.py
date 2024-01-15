@@ -1,7 +1,7 @@
 import serial
 import time
 
-COM = 'COM5'
+COM = 'COM4'
 BAUD = 9600
 ser = serial.Serial(COM, BAUD)
 time.sleep(4)
@@ -45,83 +45,3 @@ def arduino_SCPI(command_input):
             return out
     else:
         return "Invalid command"
-
-'''
-print("Getting units... ")
-response = ''
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-print("Decrementing... ")
-arduino_SCPI('INC')
-time.sleep(10)
-
-arduino_SCPI('STOP')
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-print("TARING... ")
-arduino_SCPI('TARE')
-
-time.sleep(2)
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-
-#print("Changing target weight... ")
-#arduino
-#_SCPI('TARGETWEIGHT' + response + str(500))
-
-print("Changing units... ")
-arduino_SCPI('CHANGEUNITS')
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-print("Changing units... ")
-arduino_SCPI('CHANGEUNITS')
-
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-print("Changing units... ")
-arduino_SCPI('CHANGEUNITS')
-
-print("Getting units... ")
-response = arduino_SCPI('UNITS?')
-if response is not None:
-    print(">> " + response) 
-
-
-while (True):
-    print("Enter command: ")
-    command = input()
-    command.strip()
-    response = arduino
-_SCPI(command)
-    if response is not None:
-        print(">> " + response) 
-
-
-#time.sleep(5)
-
-#arduino
-#_SCPI("STOP")
-'''
