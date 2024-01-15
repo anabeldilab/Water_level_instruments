@@ -12,13 +12,15 @@ import plotly.graph_objects as go
 import numpy as np
 from scipy.optimize import curve_fit, root_scalar
 from datetime import datetime
-#from capacitorWaterLevelControl import find_weight_for_rc, exp_func, controlWaterLevel
+from collections import deque
 import time
 
 
 app = dash.Dash(__name__, external_stylesheets = [dbc.themes.DARKLY])
 
 calibrationList = []
+weightData = []
+weightData = deque(maxlen=20)
 stop_calibration = False
 calibration_complete = False
 optimized_rc_params = None
@@ -27,7 +29,7 @@ global_max_weight = None
 global_units_aut_control = None
 global_hysteresis = None
 global_target_weight = None
-global_capacitor_water_level_reached = False
+global_capacitor_water_level_reached = True
 
 app.layout = dbc.Container([
     dbc.Tabs([
@@ -270,11 +272,14 @@ def update_graph(n_intervals, n_clicks, active_tab):
     [State("calibration-modal", "is_open")]
 )
 def toggle_modal(run_btn, close_modal, update_status, is_open):
+    global stop_calibration
     if update_status == "Complete" and is_open:
         return False
     elif "calib-run-button" == ctx.triggered_id and not is_open:
+        stop_calibration = False
         return True
     elif "close-calib-modal" == ctx.triggered_id and is_open:
+        stop_calibration = True
         return False
     return is_open
 
@@ -289,7 +294,7 @@ def update_graph_units_table(n_intervals, active_tab):
         raise PreventUpdate
     global stop_calibration
     if (stop_calibration):
-        return {'weight': [], 'rc-value': []}
+        return [{'weight': None, 'rc-value': None}]
     formatted_data = [{'weight': pair[0], 'rc-value': pair[1]} for pair in calibrationList]
 
     return formatted_data
@@ -332,12 +337,14 @@ def update_graph_units_table(n_intervals, active_tab):
         raise PreventUpdate
     
     current_time = datetime.now().strftime("%H:%M:%S")
-    
+    weight = global_units_aut_control
+    weightData.append([current_time, weight])
     new_data = [
         go.Scatter(
-            x=[current_time],
-            y=[global_units_aut_control],
-            mode='lines+markers'
+            x=[item[0] for item in weightData], 
+            y=[item[1] for item in weightData], 
+            mode='lines+markers',
+            line_shape='spline',
         )
     ]
 
@@ -362,9 +369,8 @@ def update_graph_units_table(n_intervals, active_tab):
     prevent_initial_call = True
 )
 def run_automatic_control(run_btn, stop_btn, target, hysteresis, value):
-    global global_hysteresis, global_target_weight
+    global global_hysteresis, global_target_weight, global_capacitor_water_level_reached
     if "control-run-button" == ctx.triggered_id:
-        global_capacitor_water_level_reached = False
         if target is None or target <= 0:
             target = 100
         if hysteresis is None or hysteresis <= 0:
@@ -375,10 +381,12 @@ def run_automatic_control(run_btn, stop_btn, target, hysteresis, value):
             arduino_SCPI('TOLERANCE ' + str(hysteresis))
             arduino_SCPI('TARGETWEIGHT ' + str(target))
         elif value == 'condensador':
+            global_capacitor_water_level_reached = False
             with ThreadPoolExecutor(max_workers=1) as executor:
                 if optimized_rc_params is not None:
                     global_hysteresis = float(global_hysteresis)
                     global_target_weight = float(global_target_weight)
+                    print("Water level reached: " + str(global_capacitor_water_level_reached))
                     while not global_capacitor_water_level_reached:
                         global_capacitor_water_level_reached = controlWaterLevel()
         return target, hysteresis
